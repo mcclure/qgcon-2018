@@ -30,9 +30,14 @@
     var wasDown
 
     var program = `
+        if < playerx x -= speed acc
+        if > playerx x += speed acc
+        if > speed  30 = speed  30
+        if < speed -30 = speed -30
         += x speed
         wait
     `
+
     class Alien {
         constructor(game, y, text, vars) {
             this.obj = game.add.image(400,100,'alien')
@@ -62,6 +67,11 @@
         }
 
         codeLoad() {
+            this.codeUpdate({
+                'console' : ((x) => console.log(x)),
+                '<' :       ((x, y) => +x < +y),
+                '>' :       ((x, y) => +x > +y)
+            })
         }
 
         codeUpdate(vars) {
@@ -89,6 +99,7 @@
             }
 
             var symbol = this.codeNext()
+
             switch (symbol) {
                 case '#':
                     break
@@ -113,9 +124,23 @@
 
                     this.codeSet(a, this.codeGet(a) - b)
                     break
+                case 'if':
+                    var a = this.codeEat()
+                    if (a)
+                        this.codeEat()
+                    break
                 default:
-                    if (isNaN(symbol)) {                        
-                        return this.codeGet(symbol)
+                    if (isNaN(symbol)) {
+                        var a = this.codeGet(symbol)
+                        if (typeof(a) == "function") {
+                            var b = Array()
+                            for(var c = 0; c < a.length; c++) {
+                                b.push( this.codeEat() )
+                            }
+                            return a.apply(null, b)
+                        } else {
+                            return a
+                        }
                     } else {
                         return +symbol
                     }
@@ -128,6 +153,8 @@
             switch(name) {
                 case 'x':
                     return this.obj.x
+                case 'playerx':
+                    return player.x
                 default:
                     return this.codeScope[name]
             }
@@ -168,7 +195,7 @@
         player.y = config.height-50
 
         aliens = Array(3).fill().map((_, i) => new Alien(this, i * 400/3 + 75,
-            program, {speed : i+1}
+            program, {speed: 0, acc : i+1}
         ))
     }
 
