@@ -30,8 +30,15 @@
     var wasDown
 
     var program = `
-        if < playerx x -= speed acc
-        if > playerx x += speed acc
+    = target playerx
+    if firing go flee
+    go ready
+    flee:
+        if < playerx x += target 300
+        if > playerx x -= target 300
+    ready:
+        if < target x -= speed acc
+        if > target x += speed acc
         if > speed  30 = speed  30
         if < speed -30 = speed -30
         += x speed
@@ -87,11 +94,17 @@
         }
 
         codeEat() {
+            function isLabel(x) {
+                return x.endsWith(":")
+            }
+
             while(1) {
                 if (this.codeLine >= this.code.length) {
                     this.codeLine = 0
                     this.codePos = 0
                 } else if (this.code[this.codeLine].length == 0) {
+                    this.codeLine++
+                } else if (this.codePos == 0 && isLabel(this.code[this.codeLine][this.codePos])) {
                     this.codeLine++
                 } else {
                     break
@@ -129,6 +142,17 @@
                     if (a)
                         this.codeEat()
                     break
+                case 'go':
+                    var a = this.codeNext() + ":"
+                    for(var c in this.code) {
+                        var line = this.code[c]
+                        if (line.length && line[0] == a) {
+                            this.codeLine = c
+                            this.codePos = 0
+                            break
+                        }
+                    }
+                    break
                 default:
                     if (isNaN(symbol)) {
                         var a = this.codeGet(symbol)
@@ -155,6 +179,9 @@
                     return this.obj.x
                 case 'playerx':
                     return player.x
+                case 'firing':
+                    for (var x in shots) return true
+                    return false
                 default:
                     return this.codeScope[name]
             }
