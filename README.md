@@ -6,7 +6,9 @@ In this directory is a tiny HTML video game. To see the source, look at [index.h
 
 In this game, point a mouse and click to blow up the UFOs.
 
-In other commits in this repository, a small programming language is added to the game source to script the movement of the UFOs.
+There is a simple programming language which scripts the movement of the UFOs. At the moment, all they do is glide slowly off the screen.
+
+In other commits in this repository, the language is more complicated, and the UFOs do something more interesting.
 
 ## License
 

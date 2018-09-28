@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>QGCon talk demo</title>
-    <script src="phaser.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.0.0/dist/phaser.min.js"></script>
 </head>
 <body>
 
@@ -29,18 +29,119 @@
     var player
     var wasDown
 
+    var program = `
+        += x speed
+        wait
+    `
     class Alien {
-        constructor(game, y) {
+        constructor(game, y, text, vars) {
             this.obj = game.add.image(400,100,'alien')
             this.obj.setScale(0.5,0.5)
             this.obj.y = y
             this.obj.x = config.width/2 - 200
             this.dead = false
+
+            this.code = text.split("\n").map(x => x.trim().split(/\s+/))
+            this.codeLine = 0
+            this.codePos = 0
+            this.codeScope = {}
+            this.codeLoad()
+            this.codeUpdate(vars)
         }
 
         update() {
             if (this.dead) return
             //this.obj.x = Math.random() * config.width
+
+            this.codeDone = false
+            for (var x = 0; x < 10000 && !this.codeDone; x++) {
+                this.codeEat()
+                this.codeLine++
+                this.codePos = 0
+            }
+        }
+
+        codeLoad() {
+        }
+
+        codeUpdate(vars) {
+            for (var v in vars) {
+                this.codeScope[v] = vars[v]
+            }
+        }
+
+        codeNext() {
+            var x = this.code[this.codeLine][this.codePos]
+            this.codePos++
+            return x
+        }
+
+        codeEat() {
+            while(1) {
+                if (this.codeLine >= this.code.length) {
+                    this.codeLine = 0
+                    this.codePos = 0
+                } else if (this.code[this.codeLine].length == 0) {
+                    this.codeLine++
+                } else {
+                    break
+                }
+            }
+
+            var symbol = this.codeNext()
+            switch (symbol) {
+                case '#':
+                    break
+                case 'wait':
+                    this.codeDone = true
+                    break
+                case '=':
+                    var a = this.codeNext()
+                    var b = this.codeEat()
+
+                    this.codeSet(a, b)
+                    break
+                case '+=':
+                    var a = this.codeNext()
+                    var b = this.codeEat()
+
+                    this.codeSet(a, this.codeGet(a) + b)
+                    break
+                case '-=':
+                    var a = this.codeNext()
+                    var b = this.codeEat()
+
+                    this.codeSet(a, this.codeGet(a) - b)
+                    break
+                default:
+                    if (isNaN(symbol)) {                        
+                        return this.codeGet(symbol)
+                    } else {
+                        return +symbol
+                    }
+            }
+
+            return null
+        }
+
+        codeGet(name) {
+            switch(name) {
+                case 'x':
+                    return this.obj.x
+                default:
+                    return this.codeScope[name]
+            }
+        }
+
+        codeSet(name, val) {
+            switch(name) {
+                case 'x':
+                    this.obj.x = val
+                    break
+                default:
+                    this.codeScope[name] = val
+                    break
+            }
         }
     }
 
@@ -67,7 +168,7 @@
         player.y = config.height-50
 
         aliens = Array(3).fill().map((_, i) => new Alien(this, i * 400/3 + 75,
-            
+            program, {speed : i+1}
         ))
     }
 
