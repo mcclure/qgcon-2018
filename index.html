@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QGCon talk demo</title>
+    <script src="phaser.min.js"></script>
+</head>
+<body>
+
+    <script>
+    var config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        canvasStyle: "cursor:none",
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var game = new Phaser.Game(config);
+    var collide
+    var input
+    var logo
+    var aliens
+    var shots = {}
+    var nextshot = 0
+    var player
+    var wasDown
+
+    class Alien {
+        constructor(game, y) {
+            this.obj = game.add.image(400,100,'alien')
+            this.obj.setScale(0.5,0.5)
+            this.obj.y = y
+            this.obj.x = config.width/2 - 200
+            this.dead = false
+        }
+
+        update() {
+            if (this.dead) return
+            //this.obj.x = Math.random() * config.width
+        }
+    }
+
+    function preload ()
+    {
+        //this.load.setBaseURL('http://labs.phaser.io');
+
+        this.load.image('sky', 'bg.png');
+        this.load.image('alien', 'alien.png');
+        this.load.image('player', 'player.png');
+        this.load.image('zap', 'zap.png');
+    }
+
+    function create ()
+    {
+        //input = new Phaser.Input.InputManager(game)
+
+        var sky = this.add.image(400, 300, 'sky')
+        sky.setScale(0.5,0.5)
+
+        player = this.add.image(400,100,'player')
+        player.setScale(0.5,0.5)
+        player.x = config.width/2 - 200
+        player.y = config.height-50
+
+        aliens = Array(3).fill().map((_, i) => new Alien(this, i * 400/3 + 75,
+            
+        ))
+    }
+
+    function update ()
+    {
+        var isDown = game.input.activePointer.isDown
+        player.x = game.input.activePointer.x
+        for(var alien of aliens) {
+            alien.update()
+        }
+        var doneShots = Array()
+        for(var shotid in shots) {
+            var shot = shots[shotid]
+            shot.y = shot.y - 10
+            if (shot.y < -100) {
+                console.log("OFFSCREEN")
+                doneShots.push(shotid)
+            } else {
+                for (var alien of aliens) {
+                    if (alien.dead) continue
+                    var x = alien.obj.x-shot.x
+                    var y = alien.obj.y-shot.y
+                    if (x*x+y*y < 10000) {
+                        alien.dead = true
+                        alien.obj.destroy()
+                        doneShots.push(shotid)
+                        break
+                    }
+                }
+            }
+        }
+        for (var shotid of doneShots) {
+            shots[shotid].destroy()
+            delete shots[shotid]
+        }
+        if (isDown && !wasDown) {
+            var shot = this.add.image(player.x,player.y,'zap')
+            shot.setScale(0.5,0.5)
+            shots[nextshot++] = shot
+        }
+        wasDown = isDown
+    }
+    </script>
+
+</body>
+</html>
