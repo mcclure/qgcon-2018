@@ -1,6 +1,8 @@
 At [QGCon 2018](https://qgcon.com/) I did a talk on making small programming languages-- for fun as a personal project, or as a helper tool in video games.
 
-[You can find the talk slides here](qgcon-2018-pl-talk.pdf).
+[You can watch a video of the talk here](https://www.twitch.tv/videos/316750486?t=05m35s).
+
+[You can find the talk slides here](qgcon-2018-pl-talk.pdf), since the slides are obscured in the video.
 
 [You can play the game built during the talk here](game.html).
 
